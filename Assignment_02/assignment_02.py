@@ -347,6 +347,7 @@ for stadium in stadium_info:
 hou_2016_games['stadium_name'] = [id_name[e] for e in hou_2016_games['stadium id']]
 hou_2016_games['stadium_city'] = [id_city[e] for e in hou_2016_games['stadium id']]
 hou_2016_games['stadium_state'] = [id_state[e] for e in hou_2016_games['stadium id']]
+hou_2016_games.to_csv('q6.csv')
 q6_answer = '<{}><{}><{}><{}>,<{}>'
 for i in range(len(hou_2016_games)):
     #onegame = hou_2016_games.loc[i]
