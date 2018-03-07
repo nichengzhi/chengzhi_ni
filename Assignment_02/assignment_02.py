@@ -42,14 +42,14 @@ try:
     team_stat_list=[x for x in team_stat_2015.find_elements_by_tag_name('tr')]
     team_name = [e.find_element_by_class_name('dg-team_full').text for e in team_stat_list]
     team_league = [e.find_element_by_class_name('dg-league').text for e in team_stat_list]
-    team_homerun = [e.find_element_by_class_name('dg-r').text for e in team_stat_list]
+    team_homerun = [e.find_element_by_class_name('dg-hr').text for e in team_stat_list]
 
     team_abbrev_full = {}
     for e in team_name:
         time.sleep(normal_delay)
         team_button = driver.find_element_by_link_text(e)
         team_button.click()
-        temp_tbody = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.TAG_NAME, 'tbody')))
+        temp_tbody = WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.TAG_NAME, 'tbody')))
         team_abbrev = temp_tbody.find_element_by_class_name('dg-team_abbrev').text
         team_abbrev_full[team_abbrev] = e
 
@@ -105,7 +105,7 @@ finally:
 soup = BeautifulSoup(data_html, "html.parser")
 team_name_firtinn = [e.a.string for e in soup.find_all('td', class_ = "dg-team_full")]
 team_league_firstinn = [e.string for e in soup.find_all('td', class_ = "dg-league")]
-team_home_run_firstinn = [e.string for e in soup.find_all('td', class_ = "dg-r")]
+team_home_run_firstinn = [e.string for e in soup.find_all('td', class_ = "dg-hr")]
 teams_firstinn = {"name":team_name_firtinn, "league":team_league_firstinn, "home_run":[float(i) for i in team_home_run_firstinn]}
 teams_firstinn_data=pd.DataFrame(teams_firstinn)
 teams_firstinn_data.to_csv("q2_b.csv")
@@ -229,10 +229,12 @@ try:
     data_html = data_div.get_attribute('innerHTML')
     soup = BeautifulSoup(data_html, "html.parser")
     player_name_at = [e.a.string for e in soup.find_all('td', class_ = "dg-name_display_last_init")]
+    player_href_at = [e.a['href'] for e in soup.find_all('td', class_ = "dg-name_display_last_init")]
     player_team_at = []
     player_info = []
-    for name in player_name_at:
-        ab_button = driver.find_element_by_link_text(name)
+    href_xpath = "//a[@href='{}']"
+    for href in player_href_at:
+        ab_button = driver.find_element_by_xpath(href_xpath.format(href))
         ab_button.click()
         time.sleep(normal_delay)
         name_element = WebDriverWait(driver, 30).until(EC.presence_of_element_located((By.CLASS_NAME, 'player-bio')))
@@ -242,8 +244,21 @@ try:
         time.sleep(normal_delay)
         career_stats = WebDriverWait(driver, 15).until(EC.presence_of_element_located((By.ID, 'careerStats')))
         batting_stats = career_stats.find_element_by_tag_name('tbody')
-        sit_2017 =  batting_stats.find_elements_by_tag_name('tr')[-1]
-        player_team_at.append(sit_2017.find_elements_by_tag_name('td')[1].text)
+        trs = batting_stats.find_elements_by_tag_name('tr')
+        count = 0
+        for tr in trs:
+            tds = tr.find_elements_by_tag_name('td')
+            if count > 2:
+                break
+            if tds[0].text == '2014':
+                team = tds[1].text
+                count = count + 1
+
+                if count > 1:
+                    team1 = player_team_at.pop()
+                    player_team_at.append(team1+" "+team)
+                    break
+                player_team_at.append(team)
         driver.back()
 finally:
     driver.close()
@@ -257,10 +272,16 @@ for e in player_info:
 
 player_fullteam_at = []
 for e in player_team_at:
+
     try:
+        if len(e) > 3:
+            two_team = e.split()
+            team_1_full = team_abbrev_full[two_team[0]]
+            team_2_full = team_abbrev_full[two_team[1]]
+            player_fullteam_at.append(team_1_full+"," + team_2_full)
         player_fullteam_at.append(team_abbrev_full[e])
     except KeyError:
-        player_fullteam_at.append(e)
+        pass
 players_as_2014 = {"name":as_player_fullname,  "born place":as_player_bornplace, 'team':player_fullteam_at, 'abbrev name':player_name_at}
 players_as_data=pd.DataFrame(players_as_2014)
 # use google search get the latin american countries list
