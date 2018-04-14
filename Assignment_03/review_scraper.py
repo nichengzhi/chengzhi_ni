@@ -11,7 +11,7 @@ from datetime import datetime ,date
 from bs4 import BeautifulSoup
 import re
 import pandas as pd
-#beacuse i need more data, so scrape all the review
+#beacuse i need more data, so scrape all the review.
 #end_date = datetime(2017,1,1)
 #review_list = pd.DataFrame(columns = ["name","date","text","score"])
 '''driver = webdriver.Firefox(executable_path=r'geckodriver.exe')
