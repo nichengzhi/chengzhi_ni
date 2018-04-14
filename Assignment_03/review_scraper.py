@@ -71,7 +71,10 @@ time.sleep(random.uniform(0.5, 1.5))
 verified_purchase_element = driver.find_element_by_xpath("""//*[@id="reviewer-type-dropdown_1"]""")
 webdriver.ActionChains(driver).move_to_element(verified_purchase_element).click(verified_purchase_element).perform()
 time.sleep(random.uniform(0.5, 1.5))
-while True:
+page_elements = driver.find_elements_by_class_name("page-button")
+total_page = int(page_elements[-1].text)
+page_now = 1
+while page_now <= total_page+1:
     reviews_element = WebDriverWait(driver, 15).until(
         EC.presence_of_element_located((By.ID, "cm_cr-review_list"))
     )
@@ -94,23 +97,18 @@ while True:
         review_list.loc[-1] = [name,str(review_date) , text,score,name_tag]
         review_list.index = review_list.index + 1
         review_list = review_list.sort_index()
-        review_list = review_list.drop_duplicates()
-    time.sleep(random.uniform(0.5, 1.5))
+
+    time.sleep(3)
     next_element = driver.find_element_by_class_name("a-last")
-    try:
-        next_element_a = next_element.find_element_by_tag_name("a")
-    except:
-        driver.close()
-        break
-    if next_element_a.get_attribute('href') is not None:
 
-        driver.execute_script("arguments[0].scrollIntoView();", next_element)
-        time.sleep(random.uniform(0.5, 1.5))
-        webdriver.ActionChains(driver).move_to_element(next_element).click(next_element).perform()
-    else:
-        driver.close()
-        break
+        #next_element_a = next_element.find_element_by_tag_name("a")
+    driver.execute_script("arguments[0].scrollIntoView();", next_element)
+    time.sleep(random.uniform(0.5, 1.5))
+    webdriver.ActionChains(driver).move_to_element(next_element).click(next_element).perform()
+    page_now += 1
+    print(page_now)
 
-
+driver.close()
+review_list = review_list.drop_duplicates()
 with open('reviews.json', 'w') as f:
     f.write(review_list.to_json(orient='records', lines=True))
